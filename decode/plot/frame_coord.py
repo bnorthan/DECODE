@@ -72,7 +72,12 @@ class PlotFrame:
         Plot the frame. Note that according to convention we need to transpose the last two axis.
         """
         if self.extent is None:
-            plt.imshow(self.frame.numpy(), cmap='gray')
+            import numpy as np
+            #frame_ = np.log1p(self.frame.numpy())
+            frame_ = self.frame.numpy()
+            frame_ = frame_ - frame_.min()
+            frame_ = np.power(frame_, .3)
+            plt.imshow(frame_, cmap='gray')
         else:
             plt.imshow(self.frame.numpy(), cmap='gray', extent=(
                 self.extent[0][0],
