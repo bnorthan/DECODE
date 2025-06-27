@@ -37,9 +37,12 @@ def print_wip_util():
     print('wip_util.py')
     print('temp utility module')
 
-def get_np_points(emitters, start_frame=-1, end_frame=-1):
+def get_np_points(emitters, start_frame=-1, end_frame=-1, do_3D=False):
     points=emitters.xyz_px.cpu().numpy()
-    points = points[:, :2]  # remove z coordinate
+    if do_3D:
+        points = points[:, :3]  # keep z coordinate
+    else:
+        points = points[:, :2]  # remove z coordinate
     frames_ix = emitters.frame_ix.cpu().numpy()
     points = np.append(frames_ix[:, np.newaxis], points, axis=1)
     points_sub = points[points[:, 0] > start_frame]
@@ -48,6 +51,7 @@ def get_np_points(emitters, start_frame=-1, end_frame=-1):
         points_sub = points_sub[points_sub[:, 0] < end_frame]
 
     return points_sub
+
 
 def smap_csv_to_emitters(smap_csv_name, xy_spacing=100, swap_xy=False, show_info=False):
     smap_data = pd.read_csv(smap_csv_name)
@@ -97,3 +101,23 @@ def smap_csv_to_emitters(smap_csv_name, xy_spacing=100, swap_xy=False, show_info
 
 def reverse_emitters(emitters, source_shape, source_axis, emitters_axis):
     emitters.xyz_px[:,emitters_axis] = source_shape[source_axis]-emitters.xyz_px[:,emitters_axis]-1 # reverse x axis to match smap
+
+import glob
+
+def load_iter(id, iter_pattern):  
+    print(f"loading iter for id: {id}")
+    iter_name = iter_pattern(id)
+    iters_name = glob.glob(iter_name)
+    if iters_name:
+        return imread(iters_name[0])
+    else:
+        print(f"no iters found for id: {id}")
+        return None
+
+def load_iters(start_iter, end_iter, iter_pattern):
+    """
+    Load iterated frames from a specified pattern.
+    """
+    frames = np.concatenate([load_iter(i, iter_pattern) for i in range(start_iter, end_iter)], axis=0)
+
+    return frames
