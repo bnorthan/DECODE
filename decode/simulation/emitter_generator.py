@@ -175,7 +175,6 @@ class EmitterSamplerBlinking(EmitterSamplerFrameIndependent):
         """
 
         n = self.n_sampler(self._emitter_av_total)
-
         loose_em = self.sample_loose_emitter(n=n)
         em = loose_em.return_emitterset()
         em = em.get_subset_frame(*self.frame_range)  # because the simulated frame range is larger
@@ -199,8 +198,28 @@ class EmitterSamplerBlinking(EmitterSamplerFrameIndependent):
 
         xyz = self.structure.sample(n)
 
+        # mask to decide which indices use population A vs B
+        prob = 0.95
+        mask = torch.rand(n) < prob  # True for A, False for B
+
+        # number of samples per population
+        n_A = mask.sum().item()
+        n_B = n - n_A
+
+        # Sample from A
+        samples_A = torch.clamp(self.intensity_dist.sample((n_A,)), min=self.intensity_th)
+
+        self.intensity_dist_alt = torch.distributions.normal.Normal(45000, 5000)
+        # Sample from B (you define self.intensity_dist_alt and intensity_th_alt)
+        samples_B = torch.clamp(self.intensity_dist_alt.sample((n_B,)), min=self.intensity_th)
+
+        # Combine results
+        intensity = torch.empty(n)
+        intensity[mask] = samples_A
+        intensity[~mask] = samples_B
+
         """Draw from intensity distribution but clamp the value so as not to fall below 0."""
-        intensity = torch.clamp(self.intensity_dist.sample((n,)), self.intensity_th)
+        #intensity = torch.clamp(self.intensity_dist.sample((n,)), self.intensity_th)
 
         """Distribute emitters in time. Increase the range a bit."""
         t0 = self.t0_dist.sample((n,))
