@@ -31,7 +31,7 @@ else:
         "pyyaml",
         "requests",
         "scipy<=1.8",
-        "seaborn==0.10",
+        "seaborn==0.12",
         "scikit-image",
         "scikit-learn",
         "tensorboard",
