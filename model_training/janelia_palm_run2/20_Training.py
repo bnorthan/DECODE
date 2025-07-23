@@ -14,7 +14,10 @@ from decode.neuralfitter.utils import logger as logger_utils
 
 def perform_training():
     """
-    This function simulates a training process.
+    This function performs the Decode training process.
+
+    The notebook version generates more figures and is more interactive.
+    But the script version is faster to run and could be used on a server...
     """
     
     # Final output
