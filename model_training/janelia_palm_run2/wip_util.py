@@ -13,18 +13,24 @@ def hess_lab_to_decode(hess_lab, px_size=(130, 130)):
     print(f"Converting Hess Lab coordinates to decode format: {hess_lab.shape}")
     print(hess_lab.columns)
 
-    x_peak_width = torch.from_numpy(pd.to_numeric(hess_lab['X Peak Width'], errors='coerce').fillna(0).to_numpy())
-    y_peak_width = torch.from_numpy(pd.to_numeric(hess_lab['Y Peak Width'], errors='coerce').fillna(0).to_numpy())
+
+    x = torch.from_numpy(pd.to_numeric(hess_lab['X Position'], errors='coerce').fillna(0).to_numpy()*px_size[0])
+    y = torch.from_numpy(pd.to_numeric(hess_lab['Y Position'], errors='coerce').fillna(0).to_numpy()*px_size[1])
+    z = torch.from_numpy(pd.to_numeric(hess_lab['Z Position'], errors='coerce').fillna(0).to_numpy())
+
+    x_peak_width = torch.from_numpy(pd.to_numeric(hess_lab['Sigma X Pos Full'], errors='coerce').fillna(0).to_numpy())*1000
+    y_peak_width = torch.from_numpy(pd.to_numeric(hess_lab['Sigma Y Pos Full'], errors='coerce').fillna(0).to_numpy())*1000
     sigma_z = torch.from_numpy(pd.to_numeric(hess_lab['Sigma Z'], errors='coerce').fillna(0).to_numpy())
 
+    xyz = torch.stack((x, y, z), dim=1)
     xyz_sig = torch.stack((x_peak_width, y_peak_width, sigma_z), dim=1)
 
     em = decode.EmitterSet(
-        xyz=torch.tensor(hess_lab[['X Position', 'Y Position', 'Z Position']].to_numpy()),
+        xyz=xyz, #torch.tensor(hess_lab[['X Position', 'Y Position', 'Z Position']].to_numpy()*px_size),
         xyz_sig=xyz_sig,
         phot=torch.tensor(hess_lab['6 N Photons'].to_numpy()),
         frame_ix=torch.tensor(hess_lab['Frame Number'].to_numpy().astype(int)),  # assuming frame starts at 1
-        xy_unit='px',  # z is always in nm
+        xy_unit='nm',  # z is always in nm
         px_size=px_size  # not strictly needed but recommended in order to access xyz in both nm and px
     )
 
