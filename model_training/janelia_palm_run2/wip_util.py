@@ -198,3 +198,49 @@ def filter_sigmas(emitters, x_sig_min=0, x_sig_max=float('inf'),
         (emitters.phot >= phot_min) & (emitters.phot <= phot_max)
     )
     return emitters[mask]
+
+def get_roi(emitters, xc, yc, window_size):
+    """
+    Extracts a region of interest (ROI) from emitters based on a specified center and window size.
+    
+    Parameters:
+    - emitters: Emitter data containing coordinates and other properties.
+    - xc: x-coordinate of the center.
+    - yc: y-coordinate of the center.
+    - window_size: Size of the window to extract around the center.
+    
+    Returns:
+    - roi: Emitter points within the specified window around the center.
+    """
+    roi = emitters[(
+        (emitters.xyz_px[:, 1] >= xc-window_size) & (emitters.xyz_px[:, 1] < xc + window_size) &
+        (emitters.xyz_px[:, 0] >= yc-window_size) & (emitters.xyz_px[:, 0] < yc + window_size)
+    )]
+    
+    return roi
+
+def get_bead_points(emitters, xc, yc, window_size, nframes):
+    """
+    Extracts bead points from emitters based on a specified center and window size.
+    
+    Parameters:
+    - emitters: Emitter data containing coordinates and other properties.
+    - xc: x-coordinate of the center.
+    - yc: y-coordinate of the center.
+    - window_size: Size of the window to extract around the center.
+    
+    Returns:
+    - bead_points: Points within the specified window around the center.
+    """
+    emitter = emitters[(
+        (emitters.xyz_px[:, 1] >= xc-window_size) & (emitters.xyz_px[:, 1] < xc + window_size) &
+        (emitters.xyz_px[:, 0] >= yc-window_size) & (emitters.xyz_px[:, 0] < yc + window_size)
+    )]
+
+    bead_points = get_np_points(emitter, 0, nframes, True)
+
+    bead_points_ = bead_points[:, 0:3]
+    bead_points_[:, 2] -= xc-window_size  # Adjust x-coordinates to match cropped
+    bead_points_[:, 1] -= yc-window_size  # Adjust y-coordinates to match cropped image
+
+    return bead_points, bead_points_
